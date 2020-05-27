@@ -31,5 +31,5 @@ const html = `
 const server = serve({ port: 8080 });
 console.log('http://0.0.0.0:8080/');
 for await (const req of server) {
-  req.respond(html);
+  req.respond({ body: html });
 }
