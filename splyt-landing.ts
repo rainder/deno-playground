@@ -87,3 +87,5 @@ async function queryMetadataServer(data: 'ClusterLocation' | 'ClusterName'): Pro
 
   return body || null;
 }
+
+console.log('v2');
