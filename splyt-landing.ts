@@ -1,6 +1,8 @@
 import { serve } from 'https://deno.land/std/http/server.ts';
 import { join } from 'https://raw.githubusercontent.com/denoland/deno/master/std/path/mod.ts';
 
+console.log('v2');
+
 const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -87,5 +89,3 @@ async function queryMetadataServer(data: 'ClusterLocation' | 'ClusterName'): Pro
 
   return body || null;
 }
-
-console.log('v2');
