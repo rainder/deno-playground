@@ -9,6 +9,10 @@ const state = {
   live: true,
 };
 
+setTimeout(() => {
+  state.ready = true;
+}, 10000);
+
 router.get('/ready', (ctx) => {
   ctx.response.status = state.ready ? 200 : 503;
 });
