@@ -19,11 +19,11 @@ setTimeout(() => {
   console.log('now ready');
 }, 10000);
 
-router.get('/ready', (ctx) => {
+router.get('/healthy', (ctx) => {
   ctx.response.status = state.ready ? 200 : 503;
 });
 
-router.get('/live', (ctx) => {
+router.get('/healthz', (ctx) => {
   ctx.response.status = state.live ? 200 : 503;
 });
 
