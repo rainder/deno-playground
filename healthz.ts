@@ -5,6 +5,7 @@ const app = new Application();
 const router = new Router();
 
 const state = {
+  hostname: Deno.hostname(),
   ready: false,
   live: true,
 };
@@ -45,7 +46,7 @@ router.get('/toggle/live', (ctx) => {
 });
 
 router.get('/', (ctx) => {
-  ctx.response.body = new Date().toISOString();
+  ctx.response.body = `${ new Date().toISOString() } ${ state.hostname }`;
 });
 
 
