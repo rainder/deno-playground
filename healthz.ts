@@ -9,9 +9,14 @@ const state = {
   live: true,
 };
 
+const SHUTDOWN_DELAY = Number(Deno.env.get('SHUTDOWN_DELAY') ?? '30000')
+
 Deno.signals.terminate().then(() => {
   console.log('got term signal');
   state.ready = false;
+  setTimeout(() => {
+    Deno.exit(0);
+  }, SHUTDOWN_DELAY);
 });
 
 setTimeout(() => {
