@@ -44,6 +44,10 @@ router.get('/toggle/live', (ctx) => {
   ctx.response.body = `now set to ${ state.live }`;
 });
 
+router.get('/', (ctx) => {
+  ctx.response.body = new Date().toISOString();
+});
+
 
 // Logger
 app.use(async (ctx, next) => {
