@@ -10,8 +10,10 @@ const state = {
   live: true,
 };
 
+const INIT_DELAY = Number(Deno.env.get('INIT_DELAY') ?? '30000');
 const SHUTDOWN_DELAY = Number(Deno.env.get('SHUTDOWN_DELAY') ?? '30000');
 
+console.log(`INIT_DELAY ${ INIT_DELAY }`);
 console.log(`SHUTDOWN_DELAY ${ SHUTDOWN_DELAY }`);
 
 Deno.signals.terminate().then(() => {
@@ -25,7 +27,7 @@ Deno.signals.terminate().then(() => {
 setTimeout(() => {
   state.ready = true;
   console.log('now ready');
-}, 10000);
+}, INIT_DELAY);
 
 router.get('/healthy', (ctx) => {
   ctx.response.status = state.ready ? 200 : 503;
