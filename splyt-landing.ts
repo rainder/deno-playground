@@ -1,4 +1,7 @@
 import { serve } from 'https://deno.land/std/http/server.ts';
+import { join } from 'https://raw.githubusercontent.com/denoland/deno/master/std/path/mod.ts';
+
+console.log('v2');
 
 const html = `
 <!DOCTYPE html>
@@ -28,10 +31,61 @@ const html = `
 </html>
 `;
 
+const [clusterName, clusterLocation] = await Promise.all([
+  queryMetadataServer('ClusterName'),
+  queryMetadataServer('ClusterLocation'),
+]);
+
+const text = `
+Splyt Technologies Ltd.
+`;
+
+
+const headers = new Headers();
+
+Object.entries({
+  'x-cluster-name': clusterName,
+  'x-cluster-location': clusterLocation,
+}).filter(([, v]) => !!v).forEach(([k, v]) => {
+  headers.append(k, v as string);
+});
+
 const server = serve({ port: 8080 });
 console.log('http://0.0.0.0:8080/');
 for await (const req of server) {
+  if (req.headers.get('accept')?.match(/text\/html/)) {
+    req.respond({
+      headers,
+      body: html,
+    });
+
+    continue;
+  }
+
   req.respond({
-    body: html,
+    headers,
+    body: text,
   });
+}
+
+async function queryMetadataServer(data: 'ClusterLocation' | 'ClusterName'): Promise<string | null> {
+  const path = ({
+    'ClusterLocation': '/computeMetadata/v1/instance/attributes/cluster-location',
+    'ClusterName': '/computeMetadata/v1/instance/attributes/cluster-name',
+  })[data];
+
+  const url = join('http://metadata.google.internal', path);
+  const r = await fetch(url, {
+    headers: {
+      'Metadata-Flavor': 'Google',
+    },
+  }).catch(() => null);
+
+  if (!r || !r.ok) {
+    return null;
+  }
+
+  const body = await r.text();
+
+  return body || null;
 }
