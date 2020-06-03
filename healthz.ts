@@ -9,6 +9,8 @@ const state = {
   live: true,
 };
 
+Deno.signals.terminate().then(() => state.ready = false);
+
 setTimeout(() => {
   state.ready = true;
 }, 10000);
