@@ -9,10 +9,14 @@ const state = {
   live: true,
 };
 
-Deno.signals.terminate().then(() => state.ready = false);
+Deno.signals.terminate().then(() => {
+  console.log('got term signal');
+  state.ready = false;
+});
 
 setTimeout(() => {
   state.ready = true;
+  console.log('now ready');
 }, 10000);
 
 router.get('/ready', (ctx) => {
