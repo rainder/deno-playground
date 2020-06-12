@@ -55,6 +55,7 @@ console.log('http://0.0.0.0:8080/');
 for await (const req of server) {
   if (req.headers.get('accept')?.match(/text\/html/)) {
     req.respond({
+      status: 404,
       headers,
       body: html,
     });
@@ -63,6 +64,7 @@ for await (const req of server) {
   }
 
   req.respond({
+    status: 404,
     headers,
     body: text,
   });
