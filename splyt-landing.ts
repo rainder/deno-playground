@@ -36,9 +36,7 @@ const [clusterName, clusterLocation] = await Promise.all([
   queryMetadataServer('ClusterLocation'),
 ]);
 
-const text = `
-Splyt Technologies Ltd.
-`;
+const text = `Splyt Technologies Ltd.\n`;
 
 
 const headers = new Headers();
