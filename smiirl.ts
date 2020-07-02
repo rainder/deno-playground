@@ -4,7 +4,10 @@ const app = new Application();
 const router = new Router();
 const host = Deno.env.get('host');
 
-const memory = {
+const memory: {
+  total: number;
+  today: number;
+} = {
   total: 0,
   today: 0,
 };
