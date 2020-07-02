@@ -48,7 +48,7 @@ Object.entries({
   headers.append(k, v as string);
 });
 
-const server = serve({ port: 8080 });
+const server = serve({ port: 8080, hostname: '0.0.0.0' });
 console.log('http://0.0.0.0:8080/');
 for await (const req of server) {
   if (req.headers.get('accept')?.match(/text\/html/)) {

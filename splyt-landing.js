@@ -4368,7 +4368,7 @@ System.register("file:///Users/endriu/Developer/splyt/deno-playground/splyt-land
             }).filter(([, v]) => !!v).forEach(([k, v]) => {
                 headers.append(k, v);
             });
-            server = server_ts_2.serve({ port: 8080 });
+            server = server_ts_2.serve({ port: 8080, hostname: '0.0.0.0' });
             console.log('http://0.0.0.0:8080/');
             for await (const req of server) {
                 if (req.headers.get('accept')?.match(/text\/html/)) {
