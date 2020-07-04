@@ -15371,14 +15371,17 @@ System.register("file:///Users/endriu/Developer/splyt/deno-playground/smiirl", [
             app.use(router.routes());
             app.listen({ port: 3080, hostname: '0.0.0.0' });
             (async function refresh() {
-                await Promise.all([
-                    getTotalNumber().then((r) => memory.total = r),
-                    getTodayNumber().then((r) => memory.today = r),
-                ]);
-                await new Promise((resolve) => {
-                    setTimeout(resolve, 1000);
-                });
-                return refresh();
+                while (true) {
+                    await Promise.all([
+                        getTotalNumber().then((r) => memory.total = r),
+                        getTodayNumber().then((r) => memory.today = r),
+                    ]).catch((e) => {
+                        console.error(e);
+                    });
+                    await new Promise((resolve) => {
+                        setTimeout(resolve, 1000);
+                    });
+                }
             })();
             console.log('Ready');
         }

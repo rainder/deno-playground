@@ -1,4 +1,8 @@
-import { Application, Middleware, Router } from 'https://deno.land/x/oak@571a1ba410d73f4806e317674ce48d0fda3c1228/mod.ts';
+import {
+  Application,
+  Middleware,
+  Router,
+} from 'https://deno.land/x/oak@571a1ba410d73f4806e317674ce48d0fda3c1228/mod.ts';
 
 const app = new Application();
 const router = new Router();
@@ -21,16 +25,18 @@ app.use(router.routes());
 app.listen({ port: 3080, hostname: '0.0.0.0' });
 
 (async function refresh(): Promise<void> {
-  await Promise.all([
-    getTotalNumber().then((r) => memory.total = r),
-    getTodayNumber().then((r) => memory.today = r),
-  ]);
+  while (true) {
+    await Promise.all([
+      getTotalNumber().then((r) => memory.total = r),
+      getTodayNumber().then((r) => memory.today = r),
+    ]).catch((e) => {
+      console.error(e);
+    });
 
-  await new Promise((resolve) => {
-    setTimeout(resolve, 1000);
-  });
-
-  return refresh();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 1000);
+    });
+  }
 })();
 
 /**
