@@ -31,9 +31,10 @@ const html = `
 </html>
 `;
 
-const [clusterName, clusterLocation] = await Promise.all([
+const [clusterName, clusterLocation, zone] = await Promise.all([
   queryMetadataServer('ClusterName'),
   queryMetadataServer('ClusterLocation'),
+  queryMetadataServer('Zone').then((r) => r!.split('/').pop()),
 ]);
 
 const text = `Splyt Technologies Ltd.\n`;
@@ -44,6 +45,7 @@ const headers = new Headers();
 Object.entries({
   'x-cluster-name': clusterName,
   'x-cluster-location': clusterLocation,
+  'x-cluster-zone': zone,
 }).filter(([, v]) => !!v).forEach(([k, v]) => {
   headers.append(k, v as string);
 });
@@ -68,10 +70,15 @@ for await (const req of server) {
   });
 }
 
-async function queryMetadataServer(data: 'ClusterLocation' | 'ClusterName'): Promise<string | null> {
+/*
+curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/zone
+ */
+
+async function queryMetadataServer(data: 'ClusterLocation' | 'ClusterName' | 'Zone'): Promise<string | null> {
   const path = ({
     'ClusterLocation': '/computeMetadata/v1/instance/attributes/cluster-location',
     'ClusterName': '/computeMetadata/v1/instance/attributes/cluster-name',
+    'Zone': '/computeMetadata/v1/instance/zone'
   })[data];
 
   const url = join('http://metadata.google.internal', path);

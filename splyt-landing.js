@@ -4299,12 +4299,16 @@ System.register("https://raw.githubusercontent.com/denoland/deno/master/std/path
 });
 System.register("file:///Users/endriu/Developer/splyt/deno-playground/splyt-landing", ["https://deno.land/std/http/server", "https://raw.githubusercontent.com/denoland/deno/master/std/path/mod"], function (exports_24, context_24) {
     "use strict";
-    var server_ts_2, mod_ts_6, html, _a, clusterName, clusterLocation, text, headers, server;
+    var server_ts_2, mod_ts_6, html, _a, clusterName, clusterLocation, zone, text, headers, server;
     var __moduleName = context_24 && context_24.id;
+    /*
+    curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/zone
+     */
     async function queryMetadataServer(data) {
         const path = ({
             'ClusterLocation': '/computeMetadata/v1/instance/attributes/cluster-location',
             'ClusterName': '/computeMetadata/v1/instance/attributes/cluster-name',
+            'Zone': '/computeMetadata/v1/instance/zone'
         })[data];
         const url = mod_ts_6.join('http://metadata.google.internal', path);
         const r = await fetch(url, {
@@ -4359,12 +4363,14 @@ System.register("file:///Users/endriu/Developer/splyt/deno-playground/splyt-land
             _a = await Promise.all([
                 queryMetadataServer('ClusterName'),
                 queryMetadataServer('ClusterLocation'),
-            ]), clusterName = _a[0], clusterLocation = _a[1];
+                queryMetadataServer('Zone').then((r) => r.split('/').pop()),
+            ]), clusterName = _a[0], clusterLocation = _a[1], zone = _a[2];
             text = `Splyt Technologies Ltd.\n`;
             headers = new Headers();
             Object.entries({
                 'x-cluster-name': clusterName,
                 'x-cluster-location': clusterLocation,
+                'x-cluster-zone': zone,
             }).filter(([, v]) => !!v).forEach(([k, v]) => {
                 headers.append(k, v);
             });
