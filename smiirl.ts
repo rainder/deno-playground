@@ -2,7 +2,7 @@ import {
   Application,
   Middleware,
   Router,
-} from 'https://deno.land/x/oak@571a1ba410d73f4806e317674ce48d0fda3c1228/mod.ts';
+} from 'https://deno.land/x/oak/mod.ts';
 
 const app = new Application();
 const router = new Router();

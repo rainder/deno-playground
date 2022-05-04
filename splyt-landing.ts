@@ -1,7 +1,7 @@
-import { serve } from 'https://deno.land/std/http/server.ts';
-import { join } from 'https://raw.githubusercontent.com/denoland/deno/master/std/path/mod.ts';
+import { join } from 'https://deno.land/std@0.131.0/path/mod.ts';
+import { serve } from 'https://deno.land/std@0.137.0/http/server.ts';
 
-console.log('v2');
+console.log('v3');
 
 const html = `
 <!DOCTYPE html>
@@ -34,7 +34,7 @@ const html = `
 const [clusterName, clusterLocation, zone] = await Promise.all([
   queryMetadataServer('ClusterName'),
   queryMetadataServer('ClusterLocation'),
-  queryMetadataServer('Zone').then((r) => r!.split('/').pop()),
+  queryMetadataServer('Zone').then((r) => r?.split('/').pop()),
 ]);
 
 const text = `Splyt Technologies Ltd.\n`;
@@ -46,29 +46,28 @@ Object.entries({
   'x-cluster-name': clusterName,
   'x-cluster-location': clusterLocation,
   'x-cluster-zone': zone,
+  'Strict-Transport-Security' :'max-age=63072000; includeSubDomains; preload',
 }).filter(([, v]) => !!v).forEach(([k, v]) => {
   headers.append(k, v as string);
 });
 
-const server = serve({ port: 8080, hostname: '0.0.0.0' });
-console.log('http://0.0.0.0:8080/');
-for await (const req of server) {
-  if (req.headers.get('accept')?.match(/text\/html/)) {
-    req.respond({
-      status: 404,
-      headers,
-      body: html,
-    });
+await serve(async (req) => {
 
-    continue;
+  if (req.headers.get('accept')?.match(/text\/html/)) {
+    const newHeaders = new Headers(headers);
+    newHeaders.set('content-type', 'text/html');
+
+    return new Response(html, {
+      status: 404,
+      headers: newHeaders,
+    });
   }
 
-  req.respond({
+  return new Response(text, {
     status: 404,
     headers,
-    body: text,
   });
-}
+}, { port: 8080, hostname: '0.0.0.0' });
 
 /*
 curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/zone
