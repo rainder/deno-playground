@@ -1322,15 +1322,12 @@ const html = `
 const info = await Promise.all([
     queryMetadataServer('ClusterName'),
     queryMetadataServer('ClusterLocation'),
-    queryMetadataServer('Zone').then((r)=>r?.split('/').pop()
+    queryMetadataServer('Zone').then((r)=>r?.split('/').pop() ?? null
     ), 
 ]);
+console.log(...info);
 const text = `Splyt Technologies Ltd.\n`;
 const [clusterName, clusterLocation, zone] = info;
-console.log({
-    text,
-    info
-});
 const headers = new Headers();
 Object.entries({
     'x-cluster-name': clusterName,
