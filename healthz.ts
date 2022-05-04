@@ -1,4 +1,4 @@
-import { Application, Router } from 'https://deno.land/x/oak/mod.ts';
+import { Application, Router } from 'https://deno.land/x/oak@v10.5.1/mod.ts';
 
 
 const app = new Application();
@@ -16,7 +16,7 @@ const SHUTDOWN_DELAY = Number(Deno.env.get('SHUTDOWN_DELAY') ?? '30000');
 console.log(`INIT_DELAY ${ INIT_DELAY }`);
 console.log(`SHUTDOWN_DELAY ${ SHUTDOWN_DELAY }`);
 
-Deno.signals.terminate().then(() => {
+Deno.addSignalListener("SIGINT", () => {
   console.log('got term signal');
   state.ready = false;
   setTimeout(() => {

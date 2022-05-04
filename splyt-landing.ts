@@ -1,4 +1,4 @@
-import { join } from 'https://deno.land/std@0.131.0/path/mod.ts';
+import { join } from 'https://deno.land/std@0.137.0/path/mod.ts';
 import { serve } from 'https://deno.land/std@0.137.0/http/server.ts';
 
 console.log('v3');

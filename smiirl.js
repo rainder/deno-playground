@@ -371,19 +371,19 @@ function encode(data) {
     const l = uint8.length;
     for(i = 2; i < l; i += 3){
         result += base64abc[uint8[i - 2] >> 2];
-        result += base64abc[(uint8[i - 2] & 3) << 4 | uint8[i - 1] >> 4];
-        result += base64abc[(uint8[i - 1] & 15) << 2 | uint8[i] >> 6];
-        result += base64abc[uint8[i] & 63];
+        result += base64abc[(uint8[i - 2] & 0x03) << 4 | uint8[i - 1] >> 4];
+        result += base64abc[(uint8[i - 1] & 0x0f) << 2 | uint8[i] >> 6];
+        result += base64abc[uint8[i] & 0x3f];
     }
     if (i === l + 1) {
         result += base64abc[uint8[i - 2] >> 2];
-        result += base64abc[(uint8[i - 2] & 3) << 4];
+        result += base64abc[(uint8[i - 2] & 0x03) << 4];
         result += "==";
     }
     if (i === l) {
         result += base64abc[uint8[i - 2] >> 2];
-        result += base64abc[(uint8[i - 2] & 3) << 4 | uint8[i - 1] >> 4];
-        result += base64abc[(uint8[i - 1] & 15) << 2];
+        result += base64abc[(uint8[i - 2] & 0x03) << 4 | uint8[i - 1] >> 4];
+        result += base64abc[(uint8[i - 1] & 0x0f) << 2];
         result += "=";
     }
     return result;
@@ -865,12 +865,13 @@ const MIN_BUF_SIZE = 16;
 const CR = "\r".charCodeAt(0);
 const LF = "\n".charCodeAt(0);
 class BufferFullError extends Error {
-    partial;
-    name = "BufferFullError";
+    name;
     constructor(partial){
         super("Buffer full");
         this.partial = partial;
+        this.name = "BufferFullError";
     }
+    partial;
 }
 class PartialReadError extends Error {
     name = "PartialReadError";
@@ -1266,8 +1267,6 @@ class BufWriterSync extends AbstractBufBase {
     }
 }
 class LimitedReader {
-    reader;
-    limit;
     constructor(reader, limit){
         this.reader = reader;
         this.limit = limit;
@@ -1279,13 +1278,15 @@ class LimitedReader {
         if (p.length > this.limit) {
             p = p.subarray(0, this.limit);
         }
-        const n1 = await this.reader.read(p);
-        if (n1 == null) {
+        const n7 = await this.reader.read(p);
+        if (n7 == null) {
             return null;
         }
-        this.limit -= n1;
-        return n1;
+        this.limit -= n7;
+        return n7;
     }
+    reader;
+    limit;
 }
 function readerFromStreamReader(streamReader) {
     const buffer = new Buffer();
@@ -11371,14 +11372,14 @@ const SUBTYPE_NAME_REGEXP = /^[A-Za-z0-9][A-Za-z0-9!#$&^_.-]{0,126}$/;
 const TYPE_NAME_REGEXP = /^[A-Za-z0-9][A-Za-z0-9!#$&^_-]{0,126}$/;
 const TYPE_REGEXP = /^ *([A-Za-z0-9][A-Za-z0-9!#$&^_-]{0,126})\/([A-Za-z0-9][A-Za-z0-9!#$&^_.+-]{0,126}) *$/;
 class MediaType {
-    type;
-    subtype;
-    suffix;
     constructor(type, subtype, suffix){
         this.type = type;
         this.subtype = subtype;
         this.suffix = suffix;
     }
+    type;
+    subtype;
+    suffix;
 }
 function format3(obj) {
     const { subtype , suffix , type  } = obj;
@@ -11452,15 +11453,15 @@ function normalizeType(value14) {
         return;
     }
 }
-function isMediaType(value15, types1) {
+function isMediaType(value15, types2) {
     const val = normalizeType(value15);
     if (!val) {
         return false;
     }
-    if (!types1.length) {
+    if (!types2.length) {
         return val;
     }
-    for (const type of types1){
+    for (const type of types2){
         if (mimeMatch(normalize4(type), val)) {
             return type[0] === "+" || type.includes("*") ? val : type;
         }
@@ -11501,9 +11502,9 @@ function bufferToHex(buffer) {
     return arr.map((b)=>b.toString(16).padStart(2, "0")
     ).join("");
 }
-async function getRandomFilename(prefix = "", extension1 = "") {
+async function getRandomFilename(prefix = "", extension2 = "") {
     const buffer = await crypto.subtle.digest("SHA-1", crypto.getRandomValues(new Uint8Array(256)));
-    return `${prefix}${bufferToHex(buffer)}${extension1 ? `.${extension1}` : ""}`;
+    return `${prefix}${bufferToHex(buffer)}${extension2 ? `.${extension2}` : ""}`;
 }
 async function getBoundary() {
     const buffer = await crypto.subtle.digest("SHA-1", crypto.getRandomValues(new Uint8Array(256)));
@@ -11547,7 +11548,7 @@ function readableStreamFromAsyncIterable(source) {
     });
 }
 function readableStreamFromReader(reader, options = {}) {
-    const { autoClose =true , chunkSize =16640 , strategy ,  } = options;
+    const { autoClose =true , chunkSize =16_640 , strategy ,  } = options;
     return new ReadableStream({
         async pull (controller) {
             const chunk = new Uint8Array(chunkSize);
@@ -11703,12 +11704,13 @@ const MIN_BUF_SIZE1 = 16;
 const CR2 = "\r".charCodeAt(0);
 const LF2 = "\n".charCodeAt(0);
 class BufferFullError1 extends Error {
-    partial;
-    name = "BufferFullError";
+    name;
     constructor(partial){
         super("Buffer full");
         this.partial = partial;
+        this.name = "BufferFullError";
     }
+    partial;
 }
 class BufReader1 {
     #buffer;
@@ -11912,28 +11914,28 @@ function rfc2231getParam(header) {
     let match;
     while(match = FILENAME_START_ITER_REGEX.exec(header)){
         const [, ns, quote, part] = match;
-        const n3 = parseInt(ns, 10);
-        if (n3 in matches) {
-            if (n3 === 0) {
+        const n8 = parseInt(ns, 10);
+        if (n8 in matches) {
+            if (n8 === 0) {
                 break;
             }
             continue;
         }
-        matches[n3] = [
+        matches[n8] = [
             quote,
             part
         ];
     }
     const parts3 = [];
-    for(let n4 = 0; n4 < matches.length; ++n4){
-        if (!(n4 in matches)) {
+    for(let n9 = 0; n9 < matches.length; ++n9){
+        if (!(n9 in matches)) {
             break;
         }
-        let [quote, part] = matches[n4];
+        let [quote, part] = matches[n9];
         part = unquote(part);
         if (quote) {
             part = unescape(part);
-            if (n4 === 0) {
+            if (n9 === 0) {
                 part = rfc5987decode(part);
             }
         }
@@ -11958,7 +11960,7 @@ function textDecode(encoding, value30) {
             });
             const bytes = Array.from(value30, (c)=>c.charCodeAt(0)
             );
-            if (bytes.every((code)=>code <= 255
+            if (bytes.every((code)=>code <= 0xFF
             )) {
                 value30 = decoder3.decode(new Uint8Array(bytes));
                 needsEncodingFixup = false;
@@ -12155,7 +12157,7 @@ class FormDataReader {
             throw new Error("Body is already being read.");
         }
         this.#reading = true;
-        const { outPath , maxFileSize =10485760 , maxSize =0 , bufferSize =1048576 , customContentTypes ,  } = options;
+        const { outPath , maxFileSize =10_485_760 , maxSize =0 , bufferSize =1_048_576 , customContentTypes ,  } = options;
         const body = new BufReader1(this.#body, bufferSize);
         const result = {
             fields: {}
@@ -12197,7 +12199,7 @@ class FormDataReader {
             throw new Error("Body is already being read.");
         }
         this.#reading = true;
-        const { outPath , customContentTypes , maxFileSize =10485760 , maxSize =0 , bufferSize =32000 ,  } = options;
+        const { outPath , customContentTypes , maxFileSize =10_485_760 , maxSize =0 , bufferSize =32000 ,  } = options;
         const body = new BufReader1(this.#body, bufferSize);
         if (!await readToStartOrEnd(body, this.#boundaryPart, this.#boundaryFinal)) {
             return;
@@ -12384,7 +12386,7 @@ class RequestBody {
         this.#headers = headers;
         this.#readBody = readBody;
     }
-    get({ limit: limit2 = 10485760 , type: type2 , contentTypes: contentTypes1 = {}  } = {}) {
+    get({ limit: limit2 = 10_485_760 , type: type2 , contentTypes: contentTypes1 = {}  } = {}) {
         this.#validateGetArgs(type2, contentTypes1);
         if (type2 === "reader") {
             if (!this.#body) {
@@ -12525,7 +12527,7 @@ function preferredCharsets(accept = "*", provided) {
         return accepts.filter(isQuality).sort(compareSpecs).map((spec)=>spec.charset
         );
     }
-    const priorities = provided.map((type2, index)=>getCharsetPriority(type2, accepts, index)
+    const priorities = provided.map((type3, index)=>getCharsetPriority(type3, accepts, index)
     );
     return priorities.filter(isQuality).sort(compareSpecs).map((priority)=>provided[priorities.indexOf(priority)]
     );
@@ -12614,7 +12616,7 @@ function preferredEncodings(accept, provided) {
         return accepts.filter(isQuality).sort(compareSpecs).map((spec)=>spec.encoding
         );
     }
-    const priorities = provided.map((type3, index)=>getEncodingPriority(type3, accepts, index)
+    const priorities = provided.map((type4, index)=>getEncodingPriority(type4, accepts, index)
     );
     return priorities.filter(isQuality).sort(compareSpecs).map((priority)=>provided[priorities.indexOf(priority)]
     );
@@ -12700,7 +12702,7 @@ function preferredLanguages(accept = "*", provided) {
         return accepts.filter(isQuality).sort(compareSpecs).map((spec)=>spec.full
         );
     }
-    const priorities = provided.map((type4, index)=>getLanguagePriority(type4, accepts, index)
+    const priorities = provided.map((type5, index)=>getLanguagePriority(type5, accepts, index)
     );
     return priorities.filter(isQuality).sort(compareSpecs).map((priority)=>provided[priorities.indexOf(priority)]
     );
@@ -12756,7 +12758,7 @@ function parseMediaType(str, i) {
     }
     const params = Object.create(null);
     let q = 1;
-    const [, type5, subtype, parameters] = match;
+    const [, type6, subtype, parameters] = match;
     if (parameters) {
         const kvps = splitParameters(parameters).map(splitKeyValuePair);
         for (const [key16, val] of kvps){
@@ -12769,7 +12771,7 @@ function parseMediaType(str, i) {
         }
     }
     return {
-        type: type5,
+        type: type6,
         subtype,
         params,
         q,
@@ -12790,8 +12792,8 @@ function parseAccept(accept) {
 function getFullType(spec) {
     return `${spec.type}/${spec.subtype}`;
 }
-function specify3(type6, spec, index) {
-    const p = parseMediaType(type6, index);
+function specify3(type7, spec, index) {
+    const p = parseMediaType(type7, index);
     if (!p) {
         return;
     }
@@ -12822,7 +12824,7 @@ function specify3(type6, spec, index) {
         s
     };
 }
-function getMediaTypePriority(type7, accepted, index) {
+function getMediaTypePriority(type8, accepted, index) {
     let priority = {
         o: -1,
         q: 0,
@@ -12830,7 +12832,7 @@ function getMediaTypePriority(type7, accepted, index) {
         i: index
     };
     for (const accepts of accepted){
-        const spec = specify3(type7, accepts, index);
+        const spec = specify3(type8, accepts, index);
         if (spec && ((priority.s || 0) - (spec.s || 0) || (priority.q || 0) - (spec.q || 0) || (priority.o || 0) - (spec.o || 0)) < 0) {
             priority = spec;
         }
@@ -12842,8 +12844,8 @@ function preferredMediaTypes(accept, provided) {
     if (!provided) {
         return accepts.filter(isQuality).sort(compareSpecs).map(getFullType);
     }
-    const priorities = provided.map((type8, index)=>{
-        return getMediaTypePriority(type8, accepts, index);
+    const priorities = provided.map((type9, index)=>{
+        return getMediaTypePriority(type9, accepts, index);
     });
     return priorities.filter(isQuality).sort(compareSpecs).map((priority)=>provided[priorities.indexOf(priority)]
     );
@@ -12912,15 +12914,15 @@ class Request {
         this.#serverRequest = serverRequest;
         this.#body = new RequestBody(serverRequest.getBody(), serverRequest.headers);
     }
-    accepts(...types2) {
+    accepts(...types3) {
         const acceptValue = this.#serverRequest.headers.get("Accept");
         if (!acceptValue) {
-            return types2.length ? types2[0] : [
+            return types3.length ? types3[0] : [
                 "*/*"
             ];
         }
-        if (types2.length) {
-            return preferredMediaTypes(acceptValue, types2)[0];
+        if (types3.length) {
+            return preferredMediaTypes(acceptValue, types3)[0];
         }
         return preferredMediaTypes(acceptValue);
     }
@@ -13082,11 +13084,11 @@ class NativeRequest {
     }
 }
 const REDIRECT_BACK = Symbol("redirect backwards");
-async function convertBodyToBodyInit(body, type9) {
+async function convertBodyToBodyInit(body, type10) {
     let result;
     if (BODY_TYPES.includes(typeof body)) {
         result = String(body);
-        type9 = type9 ?? (isHtml(result) ? "html" : "text/plain");
+        type10 = type10 ?? (isHtml(result) ? "html" : "text/plain");
     } else if (isReader(body)) {
         result = readableStreamFromReader(body);
     } else if (ArrayBuffer.isView(body) || body instanceof ArrayBuffer || body instanceof Blob || body instanceof URLSearchParams) {
@@ -13095,21 +13097,21 @@ async function convertBodyToBodyInit(body, type9) {
         result = body.pipeThrough(new Uint8ArrayTransformStream());
     } else if (body instanceof FormData) {
         result = body;
-        type9 = "multipart/form-data";
+        type10 = "multipart/form-data";
     } else if (isAsyncIterable(body)) {
         result = readableStreamFromAsyncIterable(body);
     } else if (body && typeof body === "object") {
         result = JSON.stringify(body);
-        type9 = type9 ?? "json";
+        type10 = type10 ?? "json";
     } else if (typeof body === "function") {
         const result = body.call(null);
-        return convertBodyToBodyInit(await result, type9);
+        return convertBodyToBodyInit(await result, type10);
     } else if (body) {
         throw new TypeError("Response body was set but could not be converted.");
     }
     return [
         result,
-        type9
+        type10
     ];
 }
 class Response {
@@ -13235,12 +13237,12 @@ class Response {
         return this.#domResponse = new DomResponse(bodyInit, responseInit);
     }
     [Symbol.for("Deno.customInspect")](inspect) {
-        const { body , headers , status , type: type10 , writable  } = this;
+        const { body , headers , status , type: type11 , writable  } = this;
         return `${this.constructor.name} ${inspect({
             body,
             headers,
             status,
-            type: type10,
+            type: type11,
             writable
         })}`;
     }
@@ -13251,12 +13253,12 @@ class Response {
         const newOptions = Object.assign({}, options, {
             depth: options.depth === null ? null : options.depth - 1
         });
-        const { body , headers , status , type: type11 , writable  } = this;
+        const { body , headers , status , type: type12 , writable  } = this;
         return `${options.stylize(this.constructor.name, "special")} ${inspect({
             body,
             headers,
             status,
-            type: type11,
+            type: type12,
             writable
         }, newOptions)}`;
     }
@@ -13353,7 +13355,7 @@ async function readRange(file, range) {
     const result = new Uint8Array(length);
     let off = 0;
     while(length){
-        const p = new Uint8Array(Math.min(length, 16640));
+        const p = new Uint8Array(Math.min(length, 16_640));
         const nread = await file.read(p);
         assert1(nread !== null, "Unexpected EOF encountered when reading a range.");
         assert1(nread > 0, "Unexpected read of 0 bytes while reading a range.");
@@ -13369,7 +13371,7 @@ class MultiPartStream extends ReadableStream {
     #contentLength;
     #postscript;
     #preamble;
-    constructor(file, type12, ranges, size, boundary2){
+    constructor(file, type13, ranges, size, boundary2){
         super({
             pull: async (controller)=>{
                 const range = ranges.shift();
@@ -13391,9 +13393,9 @@ class MultiPartStream extends ReadableStream {
                 controller.enqueue(concat(this.#preamble, rangeHeader, bytes));
             }
         });
-        const resolvedType = contentType(type12);
+        const resolvedType = contentType(type13);
         if (!resolvedType) {
-            throw new TypeError(`Could not resolve media type for "${type12}"`);
+            throw new TypeError(`Could not resolve media type for "${type13}"`);
         }
         this.#preamble = encoder3.encode(`\n--${boundary2}\nContent-Type: ${resolvedType}\n`);
         this.#postscript = encoder3.encode(`\n--${boundary2}--\n`);
@@ -13475,7 +13477,7 @@ async function sendRange(response, body, range, size) {
 async function send({ request , response  }, path36, options = {
     root: ""
 }) {
-    const { brotli =true , contentTypes: contentTypes1 = {} , extensions: extensions1 , format: format4 = true , gzip =true , hidden =false , immutable =false , index , maxbuffer =1048576 , maxage =0 , root ,  } = options;
+    const { brotli =true , contentTypes: contentTypes2 = {} , extensions: extensions2 , format: format4 = true , gzip =true , hidden =false , immutable =false , index , maxbuffer =1_048_576 , maxage =0 , root ,  } = options;
     const trailingSlash = path36[path36.length - 1] === "/";
     path36 = decodeComponent(path36.substr(parse2(path36).root.length));
     if (index && trailingSlash) {
@@ -13497,8 +13499,8 @@ async function send({ request , response  }, path36, options = {
         response.headers.delete("Content-Length");
         encodingExt = ".gz";
     }
-    if (extensions1 && !/\.[^/]*$/.exec(path36)) {
-        for (let ext of extensions1){
+    if (extensions2 && !/\.[^/]*$/.exec(path36)) {
+        for (let ext of extensions2){
             if (!/^\./.exec(ext)) {
                 ext = `.${ext}`;
             }
@@ -13546,7 +13548,7 @@ async function send({ request , response  }, path36, options = {
         response.headers.set("Cache-Control", directives.join(","));
     }
     if (!response.type) {
-        response.type = encodingExt !== "" ? extname2(basename2(path36, encodingExt)) : contentTypes1[extname2(path36)] ?? extname2(path36);
+        response.type = encodingExt !== "" ? extname2(basename2(path36, encodingExt)) : contentTypes2[extname2(path36)] ?? extname2(path36);
     }
     let entity = null;
     let body = null;
@@ -13596,10 +13598,10 @@ class ServerSentEvent extends Event {
     #data;
     #id;
     #type;
-    constructor(type13, data, eventInit = {}){
-        super(type13, eventInit);
+    constructor(type14, data, eventInit = {}){
+        super(type14, eventInit);
         const { replacer , space  } = eventInit;
-        this.#type = type13;
+        this.#type = type14;
         try {
             this.#data = typeof data === "string" ? data : JSON.stringify(data, replacer, space);
         } catch (e) {
@@ -13703,7 +13705,7 @@ class SSEStreamTarget extends EventTarget {
             }
         });
         if (keepAlive) {
-            const interval = typeof keepAlive === "number" ? keepAlive : 30000;
+            const interval = typeof keepAlive === "number" ? keepAlive : 30_000;
             this.#keepAliveId = setInterval(()=>{
                 this.dispatchComment("keep-alive comment");
             }, interval);
@@ -13880,9 +13882,9 @@ class HttpServer {
         for (const httpConn of this.#httpConnections){
             try {
                 httpConn.close();
-            } catch (error1) {
-                if (!(error1 instanceof Deno.errors.BadResource)) {
-                    throw error1;
+            } catch (error2) {
+                if (!(error2 instanceof Deno.errors.BadResource)) {
+                    throw error2;
                 }
             }
         }
@@ -13914,9 +13916,9 @@ class HttpServer {
                         });
                         controller.enqueue(nativeRequest);
                         await nativeRequest.donePromise;
-                    } catch (error2) {
+                    } catch (error3) {
                         server.app.dispatchEvent(new ErrorEvent("error", {
-                            error: error2
+                            error: error3
                         }));
                     }
                     if (server.closed) {
@@ -13933,10 +13935,10 @@ class HttpServer {
                     try {
                         const conn = await listener.accept();
                         serve(conn);
-                    } catch (error3) {
+                    } catch (error4) {
                         if (!server.closed) {
                             server.app.dispatchEvent(new ErrorEvent("error", {
-                                error: error3
+                                error: error4
                             }));
                         }
                     }
@@ -14144,11 +14146,11 @@ class ApplicationErrorEvent extends ErrorEvent {
         this.context = eventInitDict.context;
     }
 }
-function logErrorListener({ error: error4 , context  }) {
-    if (error4 instanceof Error) {
-        console.error(`[uncaught application error]: ${error4.name} - ${error4.message}`);
+function logErrorListener({ error: error5 , context  }) {
+    if (error5 instanceof Error) {
+        console.error(`[uncaught application error]: ${error5.name} - ${error5.message}`);
     } else {
-        console.error(`[uncaught application error]\n`, error4);
+        console.error(`[uncaught application error]\n`, error5);
     }
     if (context) {
         let url;
@@ -14169,8 +14171,8 @@ function logErrorListener({ error: error4 , context  }) {
             writable: context.response.writable
         });
     }
-    if (error4 instanceof Error && error4.stack) {
-        console.error(`\n${error4.stack.split("\n").slice(1).join("\n")}`);
+    if (error5 instanceof Error && error5.stack) {
+        console.error(`\n${error5.stack.split("\n").slice(1).join("\n")}`);
     }
 }
 class ApplicationListenEvent extends Event {
@@ -14239,15 +14241,15 @@ class Application extends EventTarget {
                 return Object.create(this.state);
         }
     }
-     #handleError(context, error5) {
-        if (!(error5 instanceof Error)) {
-            error5 = new Error(`non-error thrown: ${JSON.stringify(error5)}`);
+     #handleError(context, error6) {
+        if (!(error6 instanceof Error)) {
+            error6 = new Error(`non-error thrown: ${JSON.stringify(error6)}`);
         }
-        const { message  } = error5;
+        const { message  } = error6;
         this.dispatchEvent(new ApplicationErrorEvent({
             context,
             message,
-            error: error5
+            error: error6
         }));
         if (!context.response.writable) {
             return;
@@ -14257,14 +14259,14 @@ class Application extends EventTarget {
         ]){
             context.response.headers.delete(key);
         }
-        if (error5.headers && error5.headers instanceof Headers) {
-            for (const [key, value] of error5.headers){
+        if (error6.headers && error6.headers instanceof Headers) {
+            for (const [key, value] of error6.headers){
                 context.response.headers.set(key, value);
             }
         }
         context.response.type = "text";
-        const status = context.response.status = Deno.errors && error5 instanceof Deno.errors.NotFound ? 404 : error5.status && typeof error5.status === "number" ? error5.status : 500;
-        context.response.body = error5.expose ? error5.message : STATUS_TEXT.get(status);
+        const status = context.response.status = Deno.errors && error6 instanceof Deno.errors.NotFound ? 404 : error6.status && typeof error6.status === "number" ? error6.status : 500;
+        context.response.body = error6.expose ? error6.message : STATUS_TEXT.get(status);
     }
     async #handleRequest(request, secure, state) {
         const context = new Context(this, request, this.#getContextState(), secure);
@@ -14309,8 +14311,8 @@ class Application extends EventTarget {
             }
         }
     }
-    addEventListener(type14, listener, options) {
-        super.addEventListener(type14, listener, options);
+    addEventListener(type15, listener, options) {
+        super.addEventListener(type15, listener, options);
     }
     handle = async (request1, secureOrConn, secure1 = false)=>{
         if (!this.#middleware.length) {
@@ -14716,8 +14718,8 @@ class Router {
     }
     allowedMethods(options2 = {}) {
         const implemented = this.#methods;
-        const allowedMethods = async (context1, next)=>{
-            const ctx = context1;
+        const allowedMethods = async (context2, next)=>{
+            const ctx = context2;
             await next();
             if (!ctx.response.status || ctx.response.status === Status.NotFound) {
                 assert1(ctx.matched);
@@ -14862,8 +14864,8 @@ class Router {
         return this;
     }
     routes() {
-        const dispatch = (context2, next1)=>{
-            const ctx1 = context2;
+        const dispatch = (context3, next1)=>{
+            const ctx1 = context3;
             let pathname;
             let method2;
             try {
