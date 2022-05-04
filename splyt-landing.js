@@ -1319,13 +1319,18 @@ const html = `
 </body>
 </html>
 `;
-const [clusterName, clusterLocation, zone] = await Promise.all([
+const info = await Promise.all([
     queryMetadataServer('ClusterName'),
     queryMetadataServer('ClusterLocation'),
     queryMetadataServer('Zone').then((r)=>r?.split('/').pop()
     ), 
 ]);
 const text = `Splyt Technologies Ltd.\n`;
+const [clusterName, clusterLocation, zone] = info;
+console.log({
+    text,
+    info
+});
 const headers = new Headers();
 Object.entries({
     'x-cluster-name': clusterName,
@@ -1334,7 +1339,7 @@ Object.entries({
     'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload'
 }).filter(([, v])=>!!v
 ).forEach(([k, v])=>{
-    headers.append(k, v);
+    v && headers.set(k, v);
 });
 await serve(async (req)=>{
     if (req.headers.get('accept')?.match(/text\/html/)) {

@@ -31,13 +31,16 @@ const html = `
 </html>
 `;
 
-const [clusterName, clusterLocation, zone] = await Promise.all([
+const info = await Promise.all([
   queryMetadataServer('ClusterName'),
   queryMetadataServer('ClusterLocation'),
-  queryMetadataServer('Zone').then((r) => r?.split('/').pop()),
+  queryMetadataServer('Zone').then((r) => r?.split('/').pop() ?? null),
 ]);
 
+console.log(...info);
+
 const text = `Splyt Technologies Ltd.\n`;
+const [clusterName, clusterLocation, zone] = info;
 
 
 const headers = new Headers();
@@ -48,7 +51,7 @@ Object.entries({
   'x-cluster-zone': zone,
   'Strict-Transport-Security' :'max-age=63072000; includeSubDomains; preload',
 }).filter(([, v]) => !!v).forEach(([k, v]) => {
-  headers.append(k, v as string);
+  v && headers.set(k, v);
 });
 
 await serve(async (req) => {
